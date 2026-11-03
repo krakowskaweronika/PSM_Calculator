@@ -8,6 +8,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.style.contentPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,13 +50,31 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun CalculatorScreen() {
     var expression by remember { mutableStateOf("") }
-    val buttons = listOf(
+    val basicButtons = listOf(
         listOf(CalculatorButton("C"), CalculatorButton("⌫"), CalculatorButton("("), CalculatorButton(")")),
         listOf(CalculatorButton("7"), CalculatorButton("8"), CalculatorButton("9"), CalculatorButton("/")),
         listOf(CalculatorButton("4"), CalculatorButton("5"), CalculatorButton("6"), CalculatorButton("*")),
         listOf(CalculatorButton("1"), CalculatorButton("2"), CalculatorButton("3"), CalculatorButton("-")),
         listOf(CalculatorButton("0"), CalculatorButton("."), CalculatorButton("+"), CalculatorButton("="))
     )
+    val scientificButtons = listOf(
+        listOf(CalculatorButton("sin"), CalculatorButton("cos"), CalculatorButton("tan"), CalculatorButton("π")),
+        listOf(CalculatorButton("√"), CalculatorButton("x^y"), CalculatorButton("ln"), CalculatorButton("e"))
+    )
+
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    val onButtonClick = { button: CalculatorButton ->
+        when (button.symbol) {
+            "C" -> expression = ""
+            "⌫" -> if (expression.isNotEmpty()) expression = expression.dropLast(1)
+            "=" -> { }
+            "sin", "cos", "tan", "ln", "√" -> expression += "${button.symbol}("
+            "x^y" -> expression += "^"
+            else -> expression += button.symbol
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -85,39 +105,49 @@ fun CalculatorScreen() {
             )
         }
 
-        Column(
-            modifier = Modifier
-                .weight(2f)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            buttons.forEach { row ->
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    row.forEach { button ->
-                        Button(
-                            onClick = {
-                                when(button.symbol) {
-                                    "C" -> expression = ""
-                                    "⌫" -> if(expression.isNotEmpty()) expression = expression.dropLast(1)
-                                    "=" -> { }
-                                    else -> expression += button.symbol
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                text = button.symbol,
-                                fontSize = 24.sp
-                            )
-                        }
+        if (isLandscape) {
+            Row(
+                modifier = Modifier.weight(2f).fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ButtonGrid(buttons = scientificButtons, modifier = Modifier.weight(1f), onClick = onButtonClick)
+                ButtonGrid(buttons = basicButtons, modifier = Modifier.weight(1f), onClick = onButtonClick)
+            }
+        } else {
+                ButtonGrid(buttons = basicButtons, modifier = Modifier.weight(2f), onClick = onButtonClick)
+        }
+    }
+}
+
+@Composable
+fun ButtonGrid(
+    buttons: List<List<CalculatorButton>>,
+    modifier: Modifier = Modifier,
+    onClick: (CalculatorButton) -> Unit
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        buttons.forEach { row ->
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                row.forEach { button ->
+                    Button(
+                        onClick = { onClick(button) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(text = button.symbol,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center)
                     }
                 }
             }
