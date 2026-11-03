@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,8 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.style.contentPadding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,15 +33,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.calculator.ui.theme.CalculatorTheme
+import com.example.calculator.ui.theme.AppTheme
 
-data class CalculatorButton(val symbol: String)
+
+enum class ButtonRole { NUMBER, OPERATION, EQUALS }
+
+data class CalculatorButton(
+    val symbol: String,
+    val role: ButtonRole = ButtonRole.NUMBER
+)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            CalculatorTheme {
+            AppTheme {
                 CalculatorScreen()
                 }
             }
@@ -51,15 +59,16 @@ class MainActivity : ComponentActivity() {
 fun CalculatorScreen() {
     var expression by remember { mutableStateOf("") }
     val basicButtons = listOf(
-        listOf(CalculatorButton("C"), CalculatorButton("⌫"), CalculatorButton("("), CalculatorButton(")")),
-        listOf(CalculatorButton("7"), CalculatorButton("8"), CalculatorButton("9"), CalculatorButton("/")),
-        listOf(CalculatorButton("4"), CalculatorButton("5"), CalculatorButton("6"), CalculatorButton("*")),
-        listOf(CalculatorButton("1"), CalculatorButton("2"), CalculatorButton("3"), CalculatorButton("-")),
-        listOf(CalculatorButton("0"), CalculatorButton("."), CalculatorButton("+"), CalculatorButton("="))
+        listOf(CalculatorButton("C", ButtonRole.OPERATION), CalculatorButton("⌫", ButtonRole.OPERATION), CalculatorButton("(", ButtonRole.OPERATION), CalculatorButton(")", ButtonRole.OPERATION)),
+        listOf(CalculatorButton("7"), CalculatorButton("8"), CalculatorButton("9"), CalculatorButton("/", ButtonRole.OPERATION)),
+        listOf(CalculatorButton("4"), CalculatorButton("5"), CalculatorButton("6"), CalculatorButton("*", ButtonRole.OPERATION)),
+        listOf(CalculatorButton("1"), CalculatorButton("2"), CalculatorButton("3"), CalculatorButton("-", ButtonRole.OPERATION)),
+        listOf(CalculatorButton("0"), CalculatorButton("."), CalculatorButton("+", ButtonRole.OPERATION), CalculatorButton("=", ButtonRole.EQUALS))
     )
+
     val scientificButtons = listOf(
-        listOf(CalculatorButton("sin"), CalculatorButton("cos"), CalculatorButton("tan"), CalculatorButton("π")),
-        listOf(CalculatorButton("√"), CalculatorButton("x^y"), CalculatorButton("ln"), CalculatorButton("e"))
+        listOf(CalculatorButton("sin", ButtonRole.OPERATION), CalculatorButton("cos", ButtonRole.OPERATION), CalculatorButton("tan", ButtonRole.OPERATION), CalculatorButton("π", ButtonRole.OPERATION)),
+        listOf(CalculatorButton("√", ButtonRole.OPERATION), CalculatorButton("x^y", ButtonRole.OPERATION), CalculatorButton("ln", ButtonRole.OPERATION), CalculatorButton("e", ButtonRole.OPERATION))
     )
 
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
@@ -79,6 +88,7 @@ fun CalculatorScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -100,6 +110,7 @@ fun CalculatorScreen() {
                 text = expression,
                 fontSize = 48.sp,
                 maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .horizontalScroll(scrollState)
             )
@@ -137,17 +148,34 @@ fun ButtonGrid(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 row.forEach { button ->
+                    val containerColor = when (button.role) {
+                        ButtonRole.NUMBER -> MaterialTheme.colorScheme.surfaceVariant
+                        ButtonRole.OPERATION -> MaterialTheme.colorScheme.secondaryContainer
+                        ButtonRole.EQUALS -> MaterialTheme.colorScheme.primary
+                    }
+                    val contentColor = when (button.role) {
+                        ButtonRole.NUMBER -> MaterialTheme.colorScheme.onSurfaceVariant
+                        ButtonRole.OPERATION -> MaterialTheme.colorScheme.onSecondaryContainer
+                        ButtonRole.EQUALS -> MaterialTheme.colorScheme.onPrimary
+                    }
+
                     Button(
                         onClick = { onClick(button) },
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(0.dp)
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = containerColor,
+                            contentColor = contentColor
+                        )
                     ) {
-                        Text(text = button.symbol,
+                        Text(
+                            text = button.symbol,
                             fontSize = 20.sp,
-                            textAlign = TextAlign.Center)
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
