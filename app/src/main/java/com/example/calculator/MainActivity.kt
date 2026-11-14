@@ -36,6 +36,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.calculator.ui.theme.AppTheme
+import org.mariuszgromada.math.mxparser.Expression
+import org.mariuszgromada.math.mxparser.License
 
 
 enum class ButtonRole { NUMBER, OPERATION, EQUALS }
@@ -47,6 +49,7 @@ data class CalculatorButton(
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        License.iConfirmNonCommercialUse("Weronika")
         enableEdgeToEdge()
         setContent {
             AppTheme {
@@ -86,7 +89,26 @@ fun CalculatorScreen() {
         when (button.symbol) {
             "C" -> expression = ""
             "⌫" -> if (expression.isNotEmpty()) expression = expression.dropLast(1)
-            "=" -> { }
+            "=" -> {
+                val exp = Expression(expression)
+                if (exp.checkSyntax() && expression.lastOrNull() !in listOf(
+                        '+',
+                        '-',
+                        '*',
+                        '/',
+                        '^'
+                    )
+                ) {
+                    val result = exp.calculate()
+                    if (!result.isNaN()) {
+                        expression = if (result % 1.0 == 0.0 && result in -1e15..1e15) {
+                            result.toLong().toString()
+                        } else {
+                            result.toString()
+                        }
+                    }
+                }
+            }
             "sin", "cos", "tan", "ln", "√" -> expression += "${button.symbol}("
             "x^y" -> expression += "^"
             else -> expression += button.symbol
