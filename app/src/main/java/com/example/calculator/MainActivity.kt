@@ -1,6 +1,7 @@
 package com.example.calculator
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,12 +54,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        override fun onSaveInstanceState(outState: Bundle) {
+            super.onSaveInstanceState(outState)
+            for (key in outState.keySet()) {
+                Log.d("STAN_BUNDLE", "Klucz: $key -> Wartość: ${outState.get(key)}")
+            }
+        }
     }
 
 
 @Composable
 fun CalculatorScreen() {
-    var expression by remember { mutableStateOf("") }
+    var expression by rememberSaveable { mutableStateOf("") }
     val basicButtons = listOf(
         listOf(CalculatorButton("C", ButtonRole.OPERATION), CalculatorButton("⌫", ButtonRole.OPERATION), CalculatorButton("(", ButtonRole.OPERATION), CalculatorButton(")", ButtonRole.OPERATION)),
         listOf(CalculatorButton("7"), CalculatorButton("8"), CalculatorButton("9"), CalculatorButton("/", ButtonRole.OPERATION)),
