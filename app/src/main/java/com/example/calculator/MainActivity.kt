@@ -86,27 +86,16 @@ fun CalculatorScreen() {
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     val onButtonClick = { button: CalculatorButton ->
+        if(expression.startsWith("Błąd") && button.symbol != "=") {
+            expression = ""
+        }
         when (button.symbol) {
             "C" -> expression = ""
             "⌫" -> if (expression.isNotEmpty()) expression = expression.dropLast(1)
             "=" -> {
-                val exp = Expression(expression)
-                if (exp.checkSyntax() && expression.lastOrNull() !in listOf(
-                        '+',
-                        '-',
-                        '*',
-                        '/',
-                        '^'
-                    )
-                ) {
-                    val result = exp.calculate()
-                    if (!result.isNaN()) {
-                        expression = if (result % 1.0 == 0.0 && result in -1e15..1e15) {
-                            result.toLong().toString()
-                        } else {
-                            result.toString()
-                        }
-                    }
+                val result = evaluateExpression(expression)
+                if (result != null) {
+                    expression = result
                 }
             }
             "sin", "cos", "tan", "ln", "√" -> expression += "${button.symbol}("
