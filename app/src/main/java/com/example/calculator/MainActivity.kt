@@ -127,6 +127,7 @@ fun CalculatorScreen() {
 
             Text(
                 text = expression,
+                style = MaterialTheme.typography.displayMedium,
                 fontSize = 48.sp,
                 maxLines = 1,
                 color = MaterialTheme.colorScheme.onSurface,
